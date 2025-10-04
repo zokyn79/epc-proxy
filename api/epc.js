@@ -4,7 +4,6 @@ import fetch from 'node-fetch';
 export default async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const postcode = req.query.postcode;
@@ -20,7 +19,9 @@ export default async (req, res) => {
         Authorization: `Basic ${Buffer.from(apiKey + ':').toString('base64')}`
       }
     });
-    if (!resp.ok) throw new Error('upstream error');
+    if (!resp.ok) {          // ← print real upstream status
+      return res.status(resp.status).json({ error: `upstream ${resp.status}` });
+    }
     const data = await resp.json();
     res.status(200).json(data);
   } catch (e) {
