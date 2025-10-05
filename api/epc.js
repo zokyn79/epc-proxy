@@ -1,3 +1,4 @@
+// api/epc.js
 import fetch from 'node-fetch';
 
 export default async (req, res) => {
@@ -8,15 +9,11 @@ export default async (req, res) => {
   const postcode = req.query.postcode;
   if (!postcode) return res.status(400).json({ error: 'postcode required' });
 
+  const email = process.env.EPC_EMAIL;
   const apiKey = process.env.EPC_KEY;
 
-  /* ----  DEBUG: echo what the function actually sees  ---- */
-  if (!apiKey || apiKey.length < 30)
-    return res.status(500).json({ error: 'EPC_KEY missing', received: apiKey });
-
-  if (apiKey !== '03c8ca06c1c048c9185a80ebd36147a01971dac5')
-    return res.status(500).json({ error: 'key mismatch', received: apiKey });
-  /* -------------------------------------------------------- */
+  if (!email || !apiKey)
+    return res.status(500).json({ error: 'missing credentials' });
 
   const url = `https://epc.opendatacommunities.org/api/v1/domestic/search?postcode=${encodeURIComponent(postcode)}&size=100`;
 
@@ -24,7 +21,7 @@ export default async (req, res) => {
     const resp = await fetch(url, {
       headers: {
         Accept: 'application/json',
-        Authorization: `Basic ${Buffer.from(apiKey + ':').toString('base64')}`
+        Authorization: `Basic ${Buffer.from(`${email}:${apiKey}`).toString('base64')}`
       }
     });
     if (!resp.ok) return res.status(resp.status).json({ error: `upstream ${resp.status}` });
